@@ -97,8 +97,12 @@ func (v *validate) validateStruct(ctx context.Context, parent reflect.Value, cur
 func (v *validate) traverseField(ctx context.Context, parent reflect.Value, current reflect.Value, ns []byte, structNs []byte, cf *cField, ct *cTag) {
 	var typ reflect.Type
 	var kind reflect.Kind
+	var eff bool
 
-	current, kind, v.fldIsPointer = v.extractTypeInternal(current, false)
+	eff, current, kind, v.fldIsPointer = v.extractTypeInternal(current, false)
+	if !eff {
+		return
+	}
 
 	var isNestedStruct bool
 

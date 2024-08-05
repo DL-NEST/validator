@@ -12,7 +12,7 @@ import (
 // extractTypeInternal gets the actual underlying type of field value.
 // It will dive into pointers, customTypes and return you the
 // underlying value and it's kind.
-func (v *validate) extractTypeInternal(current reflect.Value, nullable bool) (reflect.Value, reflect.Kind, bool) {
+func (v *validate) extractTypeInternal(current reflect.Value, nullable bool) (bool, reflect.Value, reflect.Kind, bool) {
 
 BEGIN:
 	switch current.Kind() {
@@ -21,7 +21,7 @@ BEGIN:
 		nullable = true
 
 		if current.IsNil() {
-			return current, reflect.Ptr, nullable
+			return true, current, reflect.Ptr, nullable
 		}
 
 		current = current.Elem()
@@ -32,26 +32,35 @@ BEGIN:
 		nullable = true
 
 		if current.IsNil() {
-			return current, reflect.Interface, nullable
+			return true, current, reflect.Interface, nullable
 		}
 
 		current = current.Elem()
 		goto BEGIN
 
 	case reflect.Invalid:
-		return current, reflect.Invalid, nullable
+		return true, current, reflect.Invalid, nullable
 
 	default:
 
 		if v.v.hasCustomFuncs {
 
 			if fn, ok := v.v.customFuncs[current.Type()]; ok {
-				current = reflect.ValueOf(fn(current))
-				goto BEGIN
+				vc := fn(current)
+				var cc FieldError
+				if cc, ok = vc.(FieldError); ok {
+					v.errs = append(v.errs, cc)
+					return false, current, current.Kind(), nullable
+				} else {
+					current = reflect.ValueOf(vc)
+					goto BEGIN
+				}
 			}
-		}
 
-		return current, current.Kind(), nullable
+		}
+		// add err
+		v.errs = append(v.errs)
+		return true, current, current.Kind(), nullable
 	}
 }
 
