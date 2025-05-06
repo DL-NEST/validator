@@ -91,7 +91,11 @@ func (v *validate) traverseField(ctx context.Context, parent reflect.Value, curr
 	var typ reflect.Type
 	var kind reflect.Kind
 
-	current, kind, v.fldIsPointer = v.extractTypeInternal(current, false)
+	var customTypeErr bool
+	current, kind, v.fldIsPointer, customTypeErr = v.extractTypeInternal(current, false)
+	if customTypeErr {
+		return
+	}
 
 	var isNestedStruct bool
 

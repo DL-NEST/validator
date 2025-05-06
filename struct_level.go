@@ -102,12 +102,13 @@ func (v *validate) Validator() *Validate {
 
 // ExtractType gets the actual underlying type of field value.
 func (v *validate) ExtractType(field reflect.Value) (reflect.Value, reflect.Kind, bool) {
-	return v.extractTypeInternal(field, false)
+	value, kind, b, _ := v.extractTypeInternal(field, false)
+	return value, kind, b
 }
 
 // ReportError reports an error just by passing the field and tag information
 func (v *validate) ReportError(field interface{}, fieldName, structFieldName, tag, param string) {
-	fv, kind, _ := v.extractTypeInternal(reflect.ValueOf(field), false)
+	fv, kind, _, _ := v.extractTypeInternal(reflect.ValueOf(field), false)
 
 	if len(structFieldName) == 0 {
 		structFieldName = fieldName
